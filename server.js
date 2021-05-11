@@ -45,7 +45,10 @@ var dateFormat = require('dateformat');
 getAll.cloudant = function(response) {
   var names = [];
   var dates = [];  
-  mydb.list({ include_docs: true }, function(err, body) {
+  //mydb.index( {name:'nameindex', type:'json', index:{fields:['date']}});
+  mydb.list({ include_docs: true
+    , descending: true
+   }, function(err, body) {
     if (!err) {
       body.rows.forEach(function(row) {
         if(row.doc.payload)
@@ -276,3 +279,88 @@ app.listen(port, function() {
 
 
 
+const cron = require('node-cron');
+// Schedule tasks to be run on the server.
+cron.schedule('0 0 * * *', function() {
+  var names = [];
+  var dates = [];  
+  //mydb.index( {name:'nameindex', type:'json', index:{fields:['date']}});
+  mydb.list({ include_docs: true
+    , descending: true
+   }, function(err, body) {
+    if (!err) {
+      body.rows.forEach(function(row) {
+        if(row.doc.payload)
+          names.push(row.doc.payload);
+          dates.push(row.doc.payload.date);
+          //console.log('payload ', row.doc.payload);
+          //console.log('names ', names);
+      });
+
+      (async () => {
+        const response = await fetch('https://www.amp.co.nz/amp/returns-unit-prices/amp-new-zealand-retirement');
+        const text = await response.text();
+        //console.log(text);
+        //var date = text.match(/(?<=\<p>Unit prices effective as at ).*(?=\<\/p>)/)[0].split("/").join('-')+'T00:00:00Z';
+        //var date = text.match(/(?<=\<p>Unit prices effective as at ).*(?=\<\/p>)/)[0];
+        var dateNZ = text.match(/(?<=\<p>Unit prices effective as at ).*(?=\<\/p>)/)[0].split("/");
+        var date = dateNZ[2]+"-"+dateNZ[1]+"-"+dateNZ[0]+'T00:00:00Z';
+        //console.log('asdfasfdsadf  fsdfdfdf   saddsf', date);
+        //console.log('asdfsadffffffffff', dates.includes(date));        
+        if(!dates.includes(date)) {
+          var scraper = require('table-scraper');
+          scraper
+            .get('https://www.amp.co.nz/amp/returns-unit-prices/amp-new-zealand-retirement')
+            .then(function(tableData) {
+              //console.log(tableData[0][0]);
+              //const result = tableData[0].find( ({ FUND }) => FUND === 'AMP Aggressive Fund' );
+              //console.log(result[ 'UNIT PRICE ($)' ]) // { name: 'cherries', quantity: 5 }
+              var output = {};
+              var payload = {};
+              var funds = [];
+              var nikko={};
+              var amp={};
+              var asb={};
+              var anz={};
+              nikko.fund = "nikko";
+              amp.fund = "amp";
+              asb.fund = "asb";
+              anz.fund = "anz";
+              nikko.percent = 0.26;
+              amp.percent = 0.25;
+              asb.percent = 0.25;
+              anz.percent = 0.24;
+              nikko.price = tableData[0].find( ({ FUND }) => FUND === 'Nikko AM Growth Fund' )[ 'UNIT PRICE ($)' ];
+              amp.price = tableData[0].find( ({ FUND }) => FUND === 'AMP Aggressive Fund' )[ 'UNIT PRICE ($)' ];
+              asb.price = tableData[0].find( ({ FUND }) => FUND === 'ASB Growth Fund' )[ 'UNIT PRICE ($)' ];
+              anz.price = tableData[0].find( ({ FUND }) => FUND === 'ANZ Growth Fund' )[ 'UNIT PRICE ($)' ];
+              //console.log(anz.price) // { name: 'cherries', quantity: 5 }
+              funds.push(nikko);
+              funds.push(amp);
+              funds.push(asb);
+              funds.push(anz);
+              payload.date = date;
+              payload.funds = funds;
+              output.payload = payload;
+              var doc = JSON.parse(JSON.stringify(output));
+              //console.log('sadfsdafsadfsdfsadfsadfsdf', JSON.stringify(payload));
+              mydb.insert(doc, function(inserr, insbody, header) {
+                if (inserr) {
+                  console.log('[mydb.insert] ', inserr.message);
+                }
+              });
+            });
+        }
+      })()
+      //console.log('names ', names);      
+
+      //return body.rows;
+    }
+  });
+  console.log('running a task every 12am');
+});
+
+function functionName() {
+  // function body
+  // optional return; 
+} 

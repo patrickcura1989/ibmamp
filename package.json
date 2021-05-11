@@ -24,6 +24,7 @@
     "got": "^10.4.0",
     "jsdom": "^16.2.2",
     "mongodb": "^3.6.4",
+    "node-cron": "^3.0.0",
     "node-fetch": "^2.6.1",
     "playwright": "^1.10.0",
     "puppeteer": "^5.5.0",
