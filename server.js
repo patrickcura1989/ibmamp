@@ -360,7 +360,223 @@ cron.schedule('0 0 * * *', function() {
   console.log('running a task every 12am');
 });
 
+
+/*
+// API
+app.get("/api/dividendData", function (request0, response0) {
+
+
+  const needle = require('needle');
+  var dividendData = [];
+  var dates = ['2021-06-15','2021-06-16'];
+  var cookie = 'ak_bmsc=31EB54A1C899D6DBE941F78F34C65396686D3415C7290000C35BC4601BBE2D72~plFVKBKBdLTZvwMAlHAgEsKguOfZaGtaZXCWZe7FbzVj7TGJiSL9L0f1DQxpulcnRbmJ/TsWXjsyLO/cEjWQKAtcPO3DTs9/9B2KBD5YLbXimpZX5ukE2T17Tf7royfzP6F2ye7pThECFUAVPfqLXYQrgp0t59iAmJ3VxyfQF6KkKIWPgf3xXDhNGhWZzoSEaSRD2iBQxszMm1YrfeE2MekVTGJFN6gbCGg34tslUFHnE=; bm_sv=A228E33C294E2CAE96CA09EF456C19B8~4CGi8oNdXobWpFpkrFT1NHSQvLqfodjjbyAAMLWNeIz9ZKlfF/ER3HDrBcfz0iNmR2K3OGamlphzJiGhvutfQoPgntB8eDUJS8EFI/P0aUdBx08pUbhBN5l6cGmUGiy0t+gW05vHSRNi3UAvTb7sx/3lNmfBGnCFQP+G78LzsD4=';
+  var options = { headers: { 'Cookie': cookie } };
+
+  // dates.forEach(date => {
+  //   needle.get('https://api.nasdaq.com/api/calendar/dividends?date='+date, options, function(error, response) {
+  //     if (!error && response.statusCode == 200)
+  //     {
+  //       var stockData={};
+  //       var jp = require('jsonpath');
+  //       var rows = jp.query(response.body, '$.data.calendar.rows');
+
+  //       var dividends = rows[0];
+  //       for(var i = 0; i < dividends.length; i++)
+  //       {          
+  //         stockData.symbol = dividends[i].symbol;
+  //         stockData.companyName = dividends[i].companyName;
+  //         stockData.dividend_Ex_Date = dividends[i].dividend_Ex_Date;
+  //         stockData.payment_Date = dividends[i].payment_Date;
+  //         stockData.dividend_Rate = dividends[i].dividend_Rate;
+          
+  //         needle.get('https://api.nasdaq.com/api/quote/'+stockData.symbol+'/info?assetclass=stocks', options, function(error2, response2) {
+  //           //console.log("sdfasdfsafsdaafd");  
+  //           if (!error2 && response2.statusCode == 200)
+  //           {
+  //             //console.log("------------------------");  
+  //             stockData.value = jp.query(response2.body, '$.data.keyStats.PreviousClose.value').toString().replace("$","");
+  //             stockData.share = 10.0/parseFloat(stockData.value);
+  //             stockData.income = stockData.share*parseFloat(stockData.dividend_Rate);
+  //             //console.log("++++++++++++++++++");
+  //             dividendData.push(stockData);
+  //             //console.log(dividendData);
+  //           }
+  //         });          
+  //       }
+
+        
+  //     }
+  //   });
+  // });
+  
+
+
+  var async = require('async');
+  var URLs = [];
+  dates.forEach(date => {
+      URLs.push('https://api.nasdaq.com/api/calendar/dividends?date='+date);
+  })
+
+
+
+  // // Here is a similar technique using async.map, it may be more suitable
+  // function iterator2(URL, done){
+  //   needle.get(URL, options, function(error, response, body){ 
+  //     if(error){ return done(error) };
+  //     if (!error && response.statusCode == 200)
+  //     {
+  //       var stockData={};
+  //       var jp = require('jsonpath');
+  //       var rows = jp.query(response.body, '$.data.calendar.rows');
+
+  //       var dividends = rows[0];
+  //       for(var i = 0; i < dividends.length; i++)
+  //       {          
+  //         stockData.symbol = dividends[i].symbol;
+  //         stockData.companyName = dividends[i].companyName;
+  //         stockData.dividend_Ex_Date = dividends[i].dividend_Ex_Date;
+  //         stockData.payment_Date = dividends[i].payment_Date;
+  //         stockData.dividend_Rate = dividends[i].dividend_Rate;
+          
+  //         needle.get('https://api.nasdaq.com/api/quote/'+stockData.symbol+'/info?assetclass=stocks', options, function(error2, response2) {
+  //           //console.log("sdfasdfsafsdaafd");  
+  //           if (!error2 && response2.statusCode == 200)
+  //           {
+  //             //console.log("------------------------");  
+  //             stockData.value = jp.query(response2.body, '$.data.keyStats.PreviousClose.value').toString().replace("$","");
+  //             stockData.share = 10.0/parseFloat(stockData.value);
+  //             stockData.income = stockData.share*parseFloat(stockData.dividend_Rate);
+  //             //console.log("++++++++++++++++++");
+  //             //dividendData.push(stockData);
+  //             //console.log(dividendData);              
+  //           }
+  //         });          
+
+  //         dividendData.push(stockData);
+  //       }
+  //     }
+  //     done(null, body);
+  //   });
+  // };
+
+  // async.mapSeries(URLs
+  // , iterator2
+  // , function (err, results){
+  //   // global callback for async.mapSeries
+  //   if(err){ 
+  //     console.log(err) 
+  //   } else {
+  //     console.log('All Needle requests successful 1');
+  //     //console.log(dividendData);
+  //     response0.json(dividendData);
+  //   }
+  // });
+
+
+
+
+
+
+
+
+
+
+  function iterator1(URL, done){
+    
+    needle.get(URL, options, function(error, response, body){ 
+      if(error){ return done(error) };
+      if (!error && response.statusCode == 200)
+      {
+        //console.log(URL); 
+        var jp = require('jsonpath');
+        var rows = jp.query(response.body, '$.data.calendar.rows');
+
+        var URLs3 = [];
+        var dividends = rows[0];
+        for(var i = 0; i < dividends.length; i++)
+        { 
+          var stockData={};
+          stockData.symbol = dividends[i].symbol;
+          //console.log(stockData.symbol);
+          stockData.companyName = dividends[i].companyName;
+          stockData.dividend_Ex_Date = dividends[i].dividend_Ex_Date;
+          stockData.payment_Date = dividends[i].payment_Date;
+          stockData.dividend_Rate = dividends[i].dividend_Rate;
+          stockData.url = 'https://api.nasdaq.com/api/quote/'+stockData.symbol+'/info?assetclass=stocks';
+          URLs3.push(stockData)
+        }
+     
+        function iterator3(URL3, done3){
+          
+          needle.get(URL3.url, options, function(error3, response3, body3){ 
+            if(error3){ return done3(error3) };
+           // console.log(URL3.url);  
+            if (!error3 && response3.statusCode == 200)
+            {
+              var stockData={};
+              stockData.symbol = URL3.symbol;
+              //console.log(stockData.symbol);
+              stockData.companyName = URL3.companyName;
+              stockData.dividend_Ex_Date = URL3.dividend_Ex_Date;
+              stockData.payment_Date = URL3.payment_Date;
+              stockData.dividend_Rate = URL3.dividend_Rate;
+              //console.log("------------------------");  
+              stockData.value = jp.query(response3.body, '$.data.keyStats.PreviousClose.value').toString().replace("$","");
+              stockData.share = 10.0/parseFloat(stockData.value);
+              stockData.income = stockData.share*parseFloat(stockData.dividend_Rate);
+              //console.log("++++++++++++++++++");
+              dividendData.push(stockData);
+              //console.log(dividendData);   
+              console.log(stockData);            
+            }
+            done3(null);
+          });
+        };
+        
+        async.eachSeries(URLs3
+        , iterator3
+        , function (err3){
+          if(err3){ 
+            console.log(err3) 
+          } else {
+            console.log('All Needle requests successful and saved 3');
+            //dividendData.push(stockData);
+          }
+        });
+
+
+
+         
+        done(null);
+      }
+    });
+  };
+  
+  async.eachSeries(URLs
+  , iterator1
+  , function (err){
+    // global callback for async.eachSeries
+    if(err){ 
+      console.log(err) 
+    } else {
+      console.log('All Needle requests successful and saved');
+      response0.json(dividendData);
+    }
+  });
+
+
+
+
+
+
+  //response0.json(dividendData);
+  //console.log(dividendData);
+});
+*/
+
+
 function functionName() {
   // function body
   // optional return; 
 } 
+
